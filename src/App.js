@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, Eye } from 'lucide-react';
 
 // --- UPDATED: Header Component with corrected logo link and improved layout ---
 const AppHeader = () => (
@@ -52,7 +52,7 @@ const HelpModal = ({ isOpen, onClose }) => {
                         <ul className="list-disc list-inside space-y-2 text-gray-600">
                             <li><strong className="font-semibold text-gray-800">Crear Nueva Acción:</strong> En la parte superior, encontrarás el botón para empezar a registrar una nueva acción correctiva, preventiva o un plan de mejora.</li>
                             <li><strong className="font-semibold text-gray-800">Tabla de Acciones:</strong> El listado te muestra un resumen de cada acción, incluyendo su ID, tipo, fecha y proceso asociado.</li>
-                            <li><strong className="font-semibold text-gray-800">Editar (✏️) y Eliminar (🗑️):</strong> A la derecha de cada acción, tienes íconos para modificar o borrar un registro.</li>
+                            <li><strong className="font-semibold text-gray-800">Visualizar (👁️), Editar (✏️) y Eliminar (🗑️):</strong> A la derecha de cada acción, tienes íconos para ver los detalles, modificar o borrar un registro.</li>
                         </ul>
                     </div>
 
@@ -69,11 +69,11 @@ const HelpModal = ({ isOpen, onClose }) => {
                         <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">3. Descripción de las Hojas del Formulario</h3>
                         <ol className="list-decimal list-inside space-y-3 text-gray-600">
                             <li><strong className="font-semibold text-gray-800">Información General:</strong> Define el tipo, ámbito, proceso, fecha y la fuente única de la acción.</li>
-                            <li><strong className="font-semibold text-gray-800">Descripción NC (No Conformidad):</strong> Detalla el requisito, el problema y la evidencia.</li>
-                            <li><strong className="font-semibold text-gray-800">Análisis de Causas:</strong> Usa el Diagrama de Ishikawa y completa los "5 Porqués" (mínimo 3, máximo 5). <strong className="text-red-600">Es obligatorio llenar todos los campos de "porqués" para poder guardar.</strong></li>
+                            <li><strong className="font-semibold text-gray-800">Descripción NC (No Conformidad):</strong> Detalla el problema y adjunta archivos de soporte si es necesario.</li>
                             <li><strong className="font-semibold text-gray-800">Acción Directa:</strong> Registra las acciones inmediatas y su seguimiento específico.</li>
+                            <li><strong className="font-semibold text-gray-800">Análisis de Causas:</strong> Usa el Diagrama de Ishikawa y completa los "5 Porqués" (mínimo 3, máximo 5). <strong className="text-red-600">Es obligatorio llenar todos los campos de "porqués" para poder guardar.</strong></li>
                             <li><strong className="font-semibold text-gray-800">Plan de Mejora:</strong> Define el plan a largo plazo y su seguimiento.</li>
-                            <li><strong className="font-semibold text-gray-800">Riesgos y Oportunidades:</strong> Es la última hoja. Aquí analizas los posibles riesgos y oportunidades. En esta hoja encontrarás el botón para **Guardar Acción**.</li>
+                            <li><strong className="font-semibold text-gray-800">Riesgos y Oportunidades:</strong> Es la última hoja. Aquí analizas los posibles riesgos y oportunidades y registras el cierre final. En esta hoja encontrarás el botón para **Guardar Acción**.</li>
                         </ol>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ const InformacionGeneral = ({ formData, updateForm }) => (
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">FECHA</label>
                 <input
-                    type="date"
+                    type="month"
                     value={formData.fecha}
                     onChange={(e) => updateForm('fecha', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
@@ -179,16 +179,6 @@ const InformacionGeneral = ({ formData, updateForm }) => (
 const DescripcionNC = ({ formData, updateNestedForm }) => (
     <div className="space-y-4 animate-fade-in">
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Requisito</label>
-            <input
-                type="text"
-                value={formData.descripcion.requisito}
-                onChange={(e) => updateNestedForm('descripcion', 'requisito', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                placeholder="Ej: Requisito 8.3.4. Controles del Diseño y Desarrollo"
-            />
-        </div>
-        <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (no conformidad/plan de mejora/no conformidad potencial)</label>
             <textarea
                 value={formData.descripcion.descripcionNC}
@@ -198,13 +188,33 @@ const DescripcionNC = ({ formData, updateNestedForm }) => (
             />
         </div>
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Evidencia</label>
-            <textarea
-                value={formData.descripcion.evidencia}
-                onChange={(e) => updateNestedForm('descripcion', 'evidencia', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm focus:ring-green-500 focus:border-green-500"
-                placeholder="Evidencias encontradas..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Archivo de Soporte (Opcional)</label>
+            <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 cursor-pointer transition-colors shadow-sm">
+                    <Upload size={16} />
+                    <span>Seleccionar archivo</span>
+                    <input
+                        type="file"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                                updateNestedForm('descripcion', 'supportFile', e.target.files[0].name)
+                            }
+                        }}
+                        className="hidden"
+                    />
+                </label>
+                {formData.descripcion.supportFile && (
+                    <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm">
+                        <span>{formData.descripcion.supportFile}</span>
+                        <button 
+                            onClick={() => updateNestedForm('descripcion', 'supportFile', null)}
+                            className="text-green-800 hover:text-red-600"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
         <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre/Firma del responsable</label>
@@ -232,59 +242,62 @@ const AccionDirecta = ({ formData, addItemToArray, removeItemFromArray, updateAr
                     <Plus size={16} /> Agregar Acción
                 </button>
             </div>
-            {formData.accionDirecta.map((accion, index) => (
-                <div key={index} className="border p-4 rounded-lg bg-gray-50 shadow-sm animate-fade-in">
-                    <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-700">Acción {index + 1}</h4>
-                        <button
-                            onClick={() => removeItemFromArray('accionDirecta', index)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"
-                            aria-label={`Eliminar Acción ${index + 1}`}
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                            <input
-                                type="date"
-                                value={accion.fecha}
-                                onChange={(e) => updateArrayItem('accionDirecta', index, 'fecha', e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+            {formData.accionDirecta.map((accion, index) => {
+                const isAccionIncomplete = !accion.fecha || !accion.tratamiento || !accion.solucion || !accion.responsable;
+                return (
+                    <div key={index} className="border p-4 rounded-lg bg-gray-50 shadow-sm animate-fade-in">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className={`font-semibold ${isAccionIncomplete ? 'text-red-600' : 'text-gray-700'}`}>Acción {index + 1}</h4>
+                            <button
+                                onClick={() => removeItemFromArray('accionDirecta', index)}
+                                className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"
+                                aria-label={`Eliminar Acción ${index + 1}`}
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                                <input
+                                    type="month"
+                                    value={accion.fecha}
+                                    onChange={(e) => updateArrayItem('accionDirecta', index, 'fecha', e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                                <input
+                                    type="text"
+                                    value={accion.responsable}
+                                    onChange={(e) => updateArrayItem('accionDirecta', index, 'responsable', e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                                    placeholder="Responsable de la acción"
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tratamiento (Acciones a realizar)</label>
+                            <textarea
+                                value={accion.tratamiento}
+                                onChange={(e) => updateArrayItem('accionDirecta', index, 'tratamiento', e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
+                                placeholder="Describe las acciones a realizar..."
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
-                            <input
-                                type="text"
-                                value={accion.responsable}
-                                onChange={(e) => updateArrayItem('accionDirecta', index, 'responsable', e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                                placeholder="Responsable de la acción"
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Solución (Acciones Ejecutadas)</label>
+                            <textarea
+                                value={accion.solucion}
+                                onChange={(e) => updateArrayItem('accionDirecta', index, 'solucion', e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
+                                placeholder="Describe las acciones ejecutadas..."
                             />
                         </div>
                     </div>
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tratamiento (Acciones a realizar)</label>
-                        <textarea
-                            value={accion.tratamiento}
-                            onChange={(e) => updateArrayItem('accionDirecta', index, 'tratamiento', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
-                            placeholder="Describe las acciones a realizar..."
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Solución (Acciones Ejecutadas)</label>
-                        <textarea
-                            value={accion.solucion}
-                            onChange={(e) => updateArrayItem('accionDirecta', index, 'solucion', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
-                            placeholder="Describe las acciones ejecutadas..."
-                        />
-                    </div>
-                </div>
-            ))}
+                )
+            })}
             {formData.accionDirecta.length === 0 && (
                 <div className="text-center text-gray-500 py-8 border-2 border-dashed rounded-lg">
                     No hay acciones directas. Haga clic en "Agregar Acción" para comenzar.
@@ -325,7 +338,7 @@ const AccionDirecta = ({ formData, addItemToArray, removeItemFromArray, updateAr
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha de Seguimiento</label>
                             <input
-                                type="date"
+                                type="month"
                                 value={seguimiento.fecha}
                                 onChange={(e) => updateArrayItem('seguimientoAcciones', index, 'fecha', e.target.value)}
                                 className="w-full p-2 border rounded-md"
@@ -436,7 +449,7 @@ const AnalisisCausas = ({ formData, updateNestedForm }) => {
                     {/* Head (Effect/Root Cause) */}
                     <foreignObject x={headX} y={midY - (height / 4)} width={headWidth} height={height / 2}>
                         <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full bg-green-700 rounded-md flex items-center justify-center p-3 text-white text-center text-sm font-bold" style={{wordWrap: 'break-word', whiteSpace: 'normal'}}>
-                            {efecto || 'Causa Raíz'}
+                            {efecto || 'Descripción de la No Conformidad'}
                         </div>
                     </foreignObject>
     
@@ -487,7 +500,7 @@ const AnalisisCausas = ({ formData, updateNestedForm }) => {
         <div className="space-y-8 animate-fade-in">
             <div>
                 <h3 className="text-lg font-medium mb-3">Diagrama de Espina de Pescado (Ishikawa)</h3>
-                <FishboneDiagram categorias={categorias} efecto={causaRaiz || 'Causa Raíz'} />
+                <FishboneDiagram categorias={categorias} efecto={formData.descripcion.descripcionNC || 'Descripción de la No Conformidad'} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -576,10 +589,12 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                     <Plus size={16} /> Agregar Acción
                 </button>
             </div>
-            {formData.planMejora.map((accion, index) => (
+            {formData.planMejora.map((accion, index) => {
+                const isPlanIncomplete = !accion.que || !accion.como || !accion.fechaImplementacion || !accion.quien || !accion.fechaSeguimiento;
+                return (
                 <div key={index} className="border p-4 rounded-lg bg-gray-50 shadow-sm animate-fade-in">
                     <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-700">Acción de Mejora {index + 1}</h4>
+                        <h4 className={`font-semibold ${isPlanIncomplete ? 'text-red-600' : 'text-gray-700'}`}>Acción de Mejora {index + 1}</h4>
                         <button
                             onClick={() => removeItemFromArray('planMejora', index)}
                             className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"
@@ -611,7 +626,7 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha de Implementación</label>
                             <input
-                                type="date"
+                                type="month"
                                 value={accion.fechaImplementacion}
                                 onChange={(e) => updateArrayItem('planMejora', index, 'fechaImplementacion', e.target.value)}
                                 className="w-full p-2 border rounded-md"
@@ -630,7 +645,7 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha de Seguimiento</label>
                             <input
-                                type="date"
+                                type="month"
                                 value={accion.fechaSeguimiento}
                                 onChange={(e) => updateArrayItem('planMejora', index, 'fechaSeguimiento', e.target.value)}
                                 className="w-full p-2 border rounded-md"
@@ -638,7 +653,7 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                         </div>
                     </div>
                 </div>
-            ))}
+            )})}
             {formData.planMejora.length === 0 && (
                 <div className="text-center text-gray-500 py-8 border-2 border-dashed rounded-lg">
                     No hay acciones de mejora. Haga clic en "Agregar Acción" para comenzar.
@@ -654,7 +669,9 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                     <Plus size={16} /> Agregar Seguimiento
                 </button>
             </div>
-            {formData.seguimientoPlan.map((seguimiento, index) => (
+            {formData.seguimientoPlan.map((seguimiento, index) => {
+                const relatedPlan = formData.planMejora[seguimiento.planId];
+                return (
                 <div key={index} className="border p-4 rounded-lg bg-blue-50 mb-3 animate-fade-in">
                     <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium">Seguimiento Plan {index + 1}</h4>
@@ -662,24 +679,31 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                             <Trash2 size={16} />
                         </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Plan de Mejora Relacionado</label>
-                            <select
-                                value={seguimiento.planId}
-                                onChange={(e) => updateArrayItem('seguimientoPlan', index, 'planId', e.target.value)}
-                                className="w-full p-2 border rounded-md"
-                            >
-                                <option value="">Seleccione un plan</option>
-                                {formData.planMejora.map((plan, i) => (
-                                    <option key={i} value={i}>Plan {i + 1}: {plan.que.substring(0, 30)}...</option>
-                                ))}
-                            </select>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Plan de Mejora Relacionado</label>
+                        <select
+                            value={seguimiento.planId}
+                            onChange={(e) => updateArrayItem('seguimientoPlan', index, 'planId', e.target.value)}
+                            className="w-full p-2 border rounded-md"
+                        >
+                            <option value="">Seleccione un plan</option>
+                            {formData.planMejora.map((plan, i) => (
+                                <option key={i} value={i}>Acción de Mejora {i + 1}: {plan.que.substring(0, 40)}...</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {relatedPlan && (
+                        <div className="mb-4 p-3 bg-gray-100 rounded-md">
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Cómo se implementará (del plan seleccionado):</label>
+                            <p className="text-sm text-gray-800">{relatedPlan.como}</p>
                         </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha de Seguimiento</label>
                             <input
-                                type="date"
+                                type="month"
                                 value={seguimiento.fecha}
                                 onChange={(e) => updateArrayItem('seguimientoPlan', index, 'fecha', e.target.value)}
                                 className="w-full p-2 border rounded-md"
@@ -706,14 +730,14 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
                         />
                     </div>
                 </div>
-            ))}
+            )})}
         </div>
     </div>
 );
 
 
 // --- UPDATED: Component for the last step now includes the Save button ---
-const AnalisisRiesgos = ({ formData, updateForm, handleSave, editingId, isSaveDisabled }) => (
+const AnalisisRiesgos = ({ formData, updateForm, handleSave, editingId, isSaveDisabled, updateNestedForm }) => (
     <div className="space-y-4 animate-fade-in">
         <h3 className="text-lg font-medium">Análisis de la acción correctiva desde los riesgos y las oportunidades</h3>
         <textarea
@@ -731,7 +755,75 @@ const AnalisisRiesgos = ({ formData, updateForm, handleSave, editingId, isSaveDi
                 <li>¿Se establecen acciones preventivas para evitar recurrencia?</li>
             </ul>
         </div>
-        {/* --- NEW: Save button is now here and has disabled logic --- */}
+
+        {/* --- NEW: Final Closure Section --- */}
+        <div className="space-y-4 pt-8 border-t">
+            <h3 className="text-lg font-medium text-gray-800">Cierre y Verificación de la Eficacia</h3>
+             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Eficacia</label>
+                <div className="flex gap-4">
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-green-50 transition-colors has-[:checked]:bg-green-100 has-[:checked]:border-green-400">
+                        <input type="radio" name="eficacia" value="si" checked={formData.cierre.eficacia === 'si'} onChange={(e) => updateNestedForm('cierre', 'eficacia', e.target.value)} className="h-4 w-4 text-green-600" />
+                        <span className="ml-2">Sí</span>
+                    </label>
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-red-50 transition-colors has-[:checked]:bg-red-100 has-[:checked]:border-red-400">
+                        <input type="radio" name="eficacia" value="no" checked={formData.cierre.eficacia === 'no'} onChange={(e) => updateNestedForm('cierre', 'eficacia', e.target.value)} className="h-4 w-4 text-red-600" />
+                        <span className="ml-2">No</span>
+                    </label>
+                </div>
+            </div>
+            {formData.cierre.eficacia && (
+                 <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Comentario de Eficacia</label>
+                     <textarea
+                        value={formData.cierre.comentarioEficacia}
+                        onChange={(e) => updateNestedForm('cierre', 'comentarioEficacia', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
+                        placeholder="Explique por qué la acción fue o no fue eficaz..."
+                    />
+                </div>
+            )}
+            <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Lección Aprendida</label>
+                 <textarea
+                    value={formData.cierre.leccionAprendida}
+                    onChange={(e) => updateNestedForm('cierre', 'leccionAprendida', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
+                    placeholder="Describe la lección aprendida..."
+                />
+            </div>
+            <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Resultado Final</label>
+                 <textarea
+                    value={formData.cierre.resultadoFinal}
+                    onChange={(e) => updateNestedForm('cierre', 'resultadoFinal', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md h-24 shadow-sm"
+                    placeholder="Describe el resultado final de la acción..."
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Responsable del Cierre</label>
+                    <input
+                        type="text"
+                        value={formData.cierre.responsable}
+                        onChange={(e) => updateNestedForm('cierre', 'responsable', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                        placeholder="Nombre del responsable"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre</label>
+                    <input
+                        type="month"
+                        value={formData.cierre.fecha}
+                        onChange={(e) => updateNestedForm('cierre', 'fecha', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                    />
+                </div>
+            </div>
+        </div>
+
         <div className="flex flex-col items-end pt-6 border-t mt-6">
             <button 
                 onClick={handleSave} 
@@ -755,19 +847,19 @@ const SistemaAccionesCorrectivas = () => {
     const [listaAcciones, setListaAcciones] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'ascending' });
     
     const initialFormData = {
         id: null,
         tipoAccion: 'correctiva',
         ambito: '',
         proceso: '',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: new Date().toISOString().split('T')[0].substring(0, 7),
         fuente: '', // --- UPDATED: Changed to a string for single selection
         descripcion: {
-            requisito: '',
             descripcionNC: '',
-            evidencia: '',
-            responsable: ''
+            responsable: '',
+            supportFile: null
         },
         accionDirecta: [],
         analisisCausas: {
@@ -784,7 +876,15 @@ const SistemaAccionesCorrectivas = () => {
         planMejora: [],
         seguimientoAcciones: [],
         seguimientoPlan: [],
-        analisisRiesgos: ''
+        analisisRiesgos: '',
+        cierre: {
+            resultadoFinal: '',
+            fecha: '',
+            responsable: '',
+            leccionAprendida: '',
+            eficacia: '',
+            comentarioEficacia: ''
+        }
     };
 
     const [formData, setFormData] = useState(initialFormData);
@@ -799,8 +899,8 @@ const SistemaAccionesCorrectivas = () => {
     const steps = [
         { id: 0, title: 'Información General', icon: FileText },
         { id: 1, title: 'Descripción NC', icon: AlertTriangle },
-        { id: 2, title: 'Análisis de Causas', icon: TrendingUp },
-        { id: 3, title: 'Acción Directa', icon: Target },
+        { id: 2, title: 'Acción Directa', icon: Target },
+        { id: 3, title: 'Análisis de Causas', icon: TrendingUp },
         { id: 4, title: 'Plan de Mejora', icon: CheckCircle },
         { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle }
     ];
@@ -885,6 +985,33 @@ const SistemaAccionesCorrectivas = () => {
         setListaAcciones(listaAcciones.filter(accion => accion.id !== id));
         setModal({ isOpen: true, message: 'Acción eliminada.', type: 'info' });
     };
+
+    const requestSort = (key) => {
+        let direction = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedAcciones = useMemo(() => {
+        let sortableItems = [...listaAcciones];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                const keyA = sortConfig.key === 'responsable' ? a.descripcion.responsable : a[sortConfig.key];
+                const keyB = sortConfig.key === 'responsable' ? b.descripcion.responsable : b[sortConfig.key];
+
+                if (keyA < keyB) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (keyA > keyB) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [listaAcciones, sortConfig]);
     
     // --- NEW: Validation logic for the save button ---
     const isSaveDisabled = formData.analisisCausas.cincoPorque.some(porque => porque.trim() === '');
@@ -896,8 +1023,8 @@ const SistemaAccionesCorrectivas = () => {
         switch (currentStep) {
             case 0: return <InformacionGeneral {...props} />;
             case 1: return <DescripcionNC {...props} />;
-            case 2: return <AnalisisCausas {...props} />;
-            case 3: return <AccionDirecta {...props} />;
+            case 2: return <AccionDirecta {...props} />;
+            case 3: return <AnalisisCausas {...props} />;
             case 4: return <PlanMejora {...props} />;
             case 5: return <AnalisisRiesgos {...props} />;
             default: return <InformacionGeneral {...props} />;
@@ -947,20 +1074,22 @@ const SistemaAccionesCorrectivas = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proceso</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('id')}><div className="flex items-center gap-2">ID <ArrowUpDown size={14}/></div></th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('tipoAccion')}><div className="flex items-center gap-2">Tipo <ArrowUpDown size={14}/></div></th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('fecha')}><div className="flex items-center gap-2">Fecha <ArrowUpDown size={14}/></div></th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('proceso')}><div className="flex items-center gap-2">Proceso <ArrowUpDown size={14}/></div></th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('responsable')}><div className="flex items-center gap-2">Responsable <ArrowUpDown size={14}/></div></th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {listaAcciones.map(accion => (
+                                {sortedAcciones.map(accion => (
                                     <tr key={accion.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{accion.id.toString().slice(-5)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{accion.tipoAccion}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.fecha}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.proceso}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.descripcion.responsable}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button onClick={() => handleEdit(accion.id)} className="text-yellow-600 hover:text-yellow-900 mr-4" aria-label="Editar"><Edit size={16}/></button>
                                             <button onClick={() => handleDelete(accion.id)} className="text-red-600 hover:text-red-900" aria-label="Eliminar"><Trash2 size={16}/></button>
