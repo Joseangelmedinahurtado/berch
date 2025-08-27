@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown } from 'lucide-react';
 
 // --- UPDATED: Header Component with corrected logo link and improved layout ---
 const AppHeader = () => (
