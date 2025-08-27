@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle } from 'lucide-react';
 
 // --- UPDATED: Header Component with corrected logo link and improved layout ---
