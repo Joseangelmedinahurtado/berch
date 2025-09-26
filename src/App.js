@@ -538,7 +538,7 @@ const SistemaAccionesCorrectivas = () => {
     const [modal, setModal] = useState({ isOpen: false, message: '', type: 'info' });
 
     // --- LÓGICA DE VALIDACIÓN Y ESTADO DEL STEPPER ---
-    const stepDefinitions = [
+    const stepDefinitions = useMemo(() => [
         { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
         { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
         { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
@@ -546,7 +546,7 @@ const SistemaAccionesCorrectivas = () => {
         { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
         { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
         { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
-    ];
+    ], []);
 
     const managedSteps = useMemo(() => {
         const checkField = (obj, path) => path.split('.').reduce((o, i) => o && o[i] ? o[i] : null, obj);
