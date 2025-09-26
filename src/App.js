@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, ShieldCheck, Download, ChevronLeft, ChevronRight, Filter, XCircle } from 'lucide-react';
+/* global XLSX */
 
 // --- Header Component (No changes) ---
 const AppHeader = () => (
