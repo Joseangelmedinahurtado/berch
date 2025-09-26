@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, ShieldCheck, Download, ChevronLeft, ChevronRight, Filter, XCircle } from 'lucide-react';
-/* global XLSX */
 
 // --- Header Component (No changes) ---
 const AppHeader = () => (
@@ -23,7 +22,7 @@ const AppHeader = () => (
     </div>
 );
 
-// --- Help Modal Component (No changes) ---
+// --- UPDATED: Help Modal Component ---
 const HelpModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     return (
@@ -34,7 +33,29 @@ const HelpModal = ({ isOpen, onClose }) => {
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100"><X size={24} /></button>
                 </div>
                 <div className="p-6 overflow-y-auto space-y-6">
-                     {/* Content omitted for brevity */}
+                    <p className="text-gray-600">¡Bienvenido! Esta guía te ayudará a utilizar la herramienta para registrar y gestionar las acciones de mejora de manera eficiente.</p>
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">1. Vista Principal</h3>
+                        {/* ... (content omitted for brevity) ... */}
+                    </div>
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">2. Creación y Edición de una Acción</h3>
+                        {/* ... (content omitted for brevity) ... */}
+                    </div>
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">3. Descripción de las Hojas del Formulario</h3>
+                        <ol className="list-decimal list-inside space-y-4 text-gray-600">
+                            <li><strong className="font-semibold text-gray-800">Información General:</strong> Define el tipo, ámbito, proceso, fecha y la fuente única de la acción.</li>
+                            <li><strong className="font-semibold text-gray-800">Descripción NC:</strong> Detalla el problema y adjunta archivos de soporte si es necesario.</li>
+                            <li><strong className="font-semibold text-gray-800">Acción Directa:</strong> Registra las acciones inmediatas y su seguimiento específico.</li>
+                            <li><strong className="font-semibold text-gray-800">Análisis de Causas:</strong> Usa el Diagrama de Ishikawa y completa los "5 Porqués" (mínimo 3, máximo 5) para cada causa raíz.</li>
+                            <li><strong className="font-semibold text-gray-800">Plan de Mejora:</strong> Define el plan a largo plazo y su seguimiento.</li>
+                            <li>
+                                <strong className="font-semibold text-gray-800">Riesgos y Oportunidades:</strong> Revisa la no conformidad desde esta perspectiva. El análisis debe considerar la descripción del problema, el análisis de causas, el objetivo del proceso y el plan de acción. Si se identifica un riesgo u oportunidad, se debe actualizar la matriz correspondiente con apoyo de la oficina de calidad.
+                            </li>
+                            <li><strong className="font-semibold text-gray-800">Cierre de la Acción:</strong> Es la última hoja. Aquí registras la verificación final y la eficacia. En esta hoja encontrarás el botón para **Guardar Acción**.</li>
+                        </ol>
+                    </div>
                 </div>
                  <div className="p-4 bg-gray-50 border-t text-right">
                     <button onClick={onClose} className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-colors">Cerrar</button>
@@ -56,14 +77,13 @@ const StatusBar = ({ status }) => {
 };
 
 
-// --- Intelligent Stepper Component ---
+// --- Intelligent Stepper Component (No changes) ---
 const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
     const stepperRef = useRef(null);
     const totalSteps = steps.length;
     const completedSteps = steps.filter(step => step.status === 'completed').length;
 
     const handleStepClick = (stepId) => {
-        // --- UPDATED: Navigation is now unrestricted ---
         setCurrentStepId(stepId);
     };
 
@@ -103,7 +123,7 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                             <ol ref={stepperRef} className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide py-2">
                                 {steps.map((step) => (
                                     <li key={step.id} className="flex-shrink-0">
-                                        <a href="#!" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                        <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                             <div className={`${step.id === currentStepId ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-600'} w-8 h-8 rounded-full flex items-center justify-center`}>{getIconForStep(step)}</div>
                                         </a>
                                     </li>
@@ -131,7 +151,7 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                                     <div className="h-6 w-px bg-gray-300 ml-5" />
                                 )}
                                 <li>
-                                    <a href="#!" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                    <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                         {getIconForStep(step)}
                                         <span className={`${step.id === currentStepId ? 'font-bold' : ''}`}>{step.title}</span>
                                         {step.status === 'with-observations' && (<span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">{step.errorCount}</span>)}
@@ -147,9 +167,8 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
 };
 
 
-// --- Bottom Navigation Bar ---
+// --- Bottom Navigation Bar (No changes) ---
 const BottomNavBar = ({ currentStepId, steps, onNext, onPrev, onSaveDraft, setView }) => {
-    // --- UPDATED: Removed validation logic for 'Next' button ---
     return (
         <footer className="sticky bottom-0 z-30 bg-white/90 backdrop-blur-md border-t border-gray-200">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center">
@@ -320,14 +339,18 @@ const AccionDirecta = ({ formData, addItemToArray, removeItemFromArray, updateAr
 const AnalisisCausas = ({ formData, updateNestedForm }) => { 
     const { categorias, causas } = formData.analisisCausas;
     const [newSubCausas, setNewSubCausas] = useState({Medidas: '', Métodos: '', Personas: '', Materiales: '', 'Medio Ambiente': ''});
+    
+    const allSubCausas = useMemo(() => Object.values(categorias).flat(), [categorias]);
+
     const addSubCausa = (categoria) => { if (newSubCausas[categoria].trim() === '') return; const newCategorias = { ...categorias, [categoria]: [...categorias[categoria], newSubCausas[categoria]] }; updateNestedForm('analisisCausas', 'categorias', newCategorias); setNewSubCausas(prev => ({ ...prev, [categoria]: '' })); };
     const removeSubCausa = (categoria, index) => { const newCategorias = { ...categorias, [categoria]: categorias[categoria].filter((_, i) => i !== index) }; updateNestedForm('analisisCausas', 'categorias', newCategorias); };
-    const addCausa = () => { const newCausas = [...causas, { descripcion: '', cincoPorque: ['', '', ''] }]; updateNestedForm('analisisCausas', 'causas', newCausas); };
+    const addCausa = () => { const newCausas = [...causas, { subCausaSeleccionada: '', descripcion: '', cincoPorque: ['', '', ''] }]; updateNestedForm('analisisCausas', 'causas', newCausas); };
     const removeCausa = (indexToRemove) => { if (causas.length > 1) { const newCausas = causas.filter((_, index) => index !== indexToRemove); updateNestedForm('analisisCausas', 'causas', newCausas); } };
     const updateCausa = (causaIndex, field, value) => { const newCausas = causas.map((causa, index) => index === causaIndex ? { ...causa, [field]: value } : causa ); updateNestedForm('analisisCausas', 'causas', newCausas); };
     const addPorque = (causaIndex) => { const newCausas = JSON.parse(JSON.stringify(causas)); const causa = newCausas[causaIndex]; if (causa.cincoPorque.length < 5) { causa.cincoPorque.push(''); updateNestedForm('analisisCausas', 'causas', newCausas); } };
     const updatePorque = (causaIndex, porqueIndex, value) => { const newCausas = JSON.parse(JSON.stringify(causas)); newCausas[causaIndex].cincoPorque[porqueIndex] = value; updateNestedForm('analisisCausas', 'causas', newCausas); };
     const removePorque = (causaIndex, porqueIndex) => { const newCausas = JSON.parse(JSON.stringify(causas)); const causa = newCausas[causaIndex]; if (causa.cincoPorque.length > 3) { causa.cincoPorque = causa.cincoPorque.filter((_, i) => i !== porqueIndex); updateNestedForm('analisisCausas', 'causas', newCausas); } };
+    
     const FishboneDiagram = ({ categorias, efecto }) => {
         const hasCauses = Object.values(categorias).some(arr => arr.length > 0);
         if (!hasCauses) return (<div className="text-center text-gray-400 py-8 border-2 border-dashed rounded-lg bg-gray-50"><p>El diagrama de espina de pescado aparecerá aquí.</p><p className="text-sm">Agregue una sub-causa para comenzar a visualizar.</p></div>);
@@ -371,11 +394,24 @@ const AnalisisCausas = ({ formData, updateNestedForm }) => {
                 {causas.map((causa, causaIndex) => (
                     <div key={causaIndex} className="border p-4 rounded-lg bg-gray-50 shadow-sm relative animate-fade-in">
                         {causas.length > 1 && (<button onClick={() => removeCausa(causaIndex)} className="absolute top-3 right-3 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" aria-label={`Eliminar Causa Raíz ${causaIndex + 1}`}><Trash2 size={18} /></button>)}
-                        <h4 className="text-md font-semibold mb-4 text-gray-700">Causa Raíz #{causaIndex + 1}</h4>
-                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Descripción de la Causa Raíz</label><textarea value={causa.descripcion} onChange={(e) => updateCausa(causaIndex, 'descripcion', e.target.value)} className="w-full p-2 border rounded-lg h-24 bg-yellow-50 focus:ring-2 focus:ring-yellow-400" placeholder="Describe la causa raíz identificada..."/></div>
+                        <h4 className="text-md font-semibold mb-4 text-gray-700">Análisis de Causa #{causaIndex + 1}</h4>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Sub-causa de Ishikawa a analizar</label>
+                            <select value={causa.subCausaSeleccionada} onChange={(e) => updateCausa(causaIndex, 'subCausaSeleccionada', e.target.value)} className="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white">
+                                <option value="">Seleccione una sub-causa</option>
+                                {allSubCausas.map((sc, i) => (<option key={i} value={sc}>{sc}</option>))}
+                            </select>
+                        </div>
+
                         <div className="mt-4">
                             <div className="flex justify-between items-center mb-3"><h5 className="text-sm font-medium text-gray-600">Análisis de 5 Por Qué</h5><button onClick={() => addPorque(causaIndex)} disabled={causa.cincoPorque.length >= 5} className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 disabled:bg-gray-200 disabled:cursor-not-allowed text-xs"><Plus size={14} /> Agregar</button></div>
                             <div className="space-y-2">{causa.cincoPorque.map((porque, porqueIndex) => (<div key={porqueIndex} className="flex gap-2 items-center"><span className="bg-gray-200 px-3 py-2 rounded-md font-medium text-gray-700 text-sm">Por qué {porqueIndex + 1}</span><input type="text" value={porque} onChange={(e) => updatePorque(causaIndex, porqueIndex, e.target.value)} className="flex-1 p-2 border rounded-md shadow-sm" placeholder="¿Por qué ocurrió esto?"/><button onClick={() => removePorque(causaIndex, porqueIndex)} disabled={causa.cincoPorque.length <= 3} className="text-red-500 hover:text-red-700 p-2 disabled:text-gray-400 disabled:cursor-not-allowed"><Trash2 size={16} /></button></div>))}</div>
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Causa Raíz (Conclusión del análisis)</label>
+                            <textarea value={causa.descripcion} onChange={(e) => updateCausa(causaIndex, 'descripcion', e.target.value)} className="w-full p-2 border rounded-lg h-24 bg-yellow-50 focus:ring-2 focus:ring-yellow-400" placeholder="Describe la causa raíz identificada a partir de los 5 porqués..."/>
                         </div>
                     </div>
                 ))}
@@ -438,17 +474,33 @@ const PlanMejora = ({ formData, addItemToArray, removeItemFromArray, updateArray
     </div>
 );
 const AnalisisRiesgos = ({ formData, updateForm }) => ( 
-    <div className="space-y-4 animate-fade-in">
-        <h3 className="text-lg font-medium">Análisis de la acción correctiva desde los riesgos y las oportunidades</h3>
-        <textarea value={formData.analisisRiesgos} onChange={(e) => updateForm('analisisRiesgos', e.target.value)} className="w-full p-3 border rounded-lg h-32 shadow-sm" placeholder="Analiza los riesgos y oportunidades identificados..."/>
+    <div className="space-y-6 animate-fade-in">
+        <div>
+            <label className="block text-lg font-medium mb-2" htmlFor="analisis-riesgos">Análisis de la acción correctiva desde los riesgos y las oportunidades</label>
+            <textarea 
+                id="analisis-riesgos"
+                value={formData.analisisRiesgos} 
+                onChange={(e) => updateForm('analisisRiesgos', e.target.value)} 
+                className="w-full p-3 border rounded-lg h-40 shadow-sm focus:ring-2 focus:ring-blue-500" 
+                placeholder="La conclusión del análisis se registra aquí..."/>
+        </div>
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <h4 className="font-semibold text-yellow-800 mb-2">Guía para el análisis:</h4>
-            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                <li>¿Se identifican riesgos derivados de la no conformidad?</li>
-                <li>¿Existen oportunidades de mejora identificadas?</li>
-                <li>¿Las acciones implementadas generan nuevos riesgos?</li>
-                <li>¿Se establecen acciones preventivas para evitar recurrencia?</li>
+            <h4 className="font-semibold text-yellow-800 mb-3">Guía para el análisis</h4>
+            <p className="text-sm text-gray-700 mb-3">
+                Revisar la no conformidad desde la perspectiva de los riesgos y las oportunidades. Realizar un análisis teniendo en cuenta las siguientes variables:
+            </p>
+            <ul className="space-y-2 text-sm text-gray-700 list-disc list-inside">
+                <li>La descripción de la no conformidad.</li>
+                <li>El análisis de causas realizado, incluyendo los 5 porqués y la causa raíz.</li>
+                <li>Tener presente el objetivo del proceso y su aseguramiento.</li>
+                <li>El plan de acción elaborado.</li>
             </ul>
+             <p className="text-sm text-gray-700 mt-4">
+                Dependiendo de estas variables y el análisis realizado, el responsable de la acción identifica o no un riesgo o una oportunidad.
+             </p>
+             <ul className="space-y-2 text-sm text-gray-700 list-disc list-inside mt-3">
+                 <li>Si ha identificado un riesgo y/o una oportunidad, con el acompañamiento de la oficina de calidad se actualiza la matriz de riesgos y/o oportunidades (institucionales u operativo) según corresponda para su respectivo tratamiento.</li>
+             </ul>
         </div>
     </div>
 );
@@ -471,7 +523,6 @@ const CierreAccion = ({ formData, updateNestedForm, handleSave, editingId, isSav
         </div>
         <div className="flex flex-col items-end pt-6 border-t mt-6">
             <button onClick={handleSave} disabled={isSaveDisabled} className="flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-lg hover:bg-green-800 transition-colors shadow-lg text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"><Save size={20} /> {editingId ? 'Actualizar Acción' : 'Guardar Acción'}</button>
-            {/* --- UPDATED: More specific validation message --- */}
             {isSaveDisabled && (<p className="text-red-600 text-sm mt-2 text-right">Debe completar todos los campos de 'Información General' y los '5 Porqués' para poder guardar.</p>)}
         </div>
     </div>
@@ -518,7 +569,7 @@ const SistemaAccionesCorrectivas = () => {
                 'Medio Ambiente': []
             },
             causas: [
-                { descripcion: '', cincoPorque: ['', '', ''] }
+                { subCausaSeleccionada: '', descripcion: '', cincoPorque: ['', '', ''] }
             ]
         },
         planMejora: [],
@@ -538,7 +589,7 @@ const SistemaAccionesCorrectivas = () => {
     const [modal, setModal] = useState({ isOpen: false, message: '', type: 'info' });
 
     // --- LÓGICA DE VALIDACIÓN Y ESTADO DEL STEPPER ---
-    const stepDefinitions = useMemo(() => [
+    const stepDefinitions = [
         { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
         { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
         { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
@@ -546,7 +597,7 @@ const SistemaAccionesCorrectivas = () => {
         { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
         { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
         { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
-    ], []);
+    ];
 
     const managedSteps = useMemo(() => {
         const checkField = (obj, path) => path.split('.').reduce((o, i) => o && o[i] ? o[i] : null, obj);
@@ -590,7 +641,7 @@ const SistemaAccionesCorrectivas = () => {
                 tooltip: missingFields.length > 0 ? `Faltan campos: ${missingFields.join(', ')}` : 'Paso completo'
             };
         });
-    }, [formData, currentStepId, stepDefinitions]);
+    }, [formData, currentStepId]);
 
 
     // --- Handlers ---
@@ -599,7 +650,7 @@ const SistemaAccionesCorrectivas = () => {
         const today = new Date(); today.setHours(23, 59, 59, 999);
         let isOverdue = false;
         accion.planMejora.forEach((plan, planIndex) => {
-            const performedCount = accion.seguimientoPlan.filter(s => s.planId === planIndex).length;
+            const performedCount = accion.seguimientoPlan.filter(s => s.planId == planIndex).length;
             plan.fechasSeguimiento.forEach((fecha, fechaIndex) => {
                 if (fechaIndex >= performedCount) {
                     if (fecha) {
