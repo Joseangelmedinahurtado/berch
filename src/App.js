@@ -103,7 +103,7 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                             <ol ref={stepperRef} className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide py-2">
                                 {steps.map((step) => (
                                     <li key={step.id} className="flex-shrink-0">
-                                        <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                        <a href="#!" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                             <div className={`${step.id === currentStepId ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-600'} w-8 h-8 rounded-full flex items-center justify-center`}>{getIconForStep(step)}</div>
                                         </a>
                                     </li>
@@ -131,7 +131,7 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                                     <div className="h-6 w-px bg-gray-300 ml-5" />
                                 )}
                                 <li>
-                                    <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                    <a href="#!" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                         {getIconForStep(step)}
                                         <span className={`${step.id === currentStepId ? 'font-bold' : ''}`}>{step.title}</span>
                                         {step.status === 'with-observations' && (<span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">{step.errorCount}</span>)}
@@ -590,7 +590,7 @@ const SistemaAccionesCorrectivas = () => {
                 tooltip: missingFields.length > 0 ? `Faltan campos: ${missingFields.join(', ')}` : 'Paso completo'
             };
         });
-    }, [formData, currentStepId]);
+    }, [formData, currentStepId, stepDefinitions]);
 
 
     // --- Handlers ---
@@ -599,7 +599,7 @@ const SistemaAccionesCorrectivas = () => {
         const today = new Date(); today.setHours(23, 59, 59, 999);
         let isOverdue = false;
         accion.planMejora.forEach((plan, planIndex) => {
-            const performedCount = accion.seguimientoPlan.filter(s => s.planId == planIndex).length;
+            const performedCount = accion.seguimientoPlan.filter(s => s.planId === planIndex).length;
             plan.fechasSeguimiento.forEach((fecha, fechaIndex) => {
                 if (fechaIndex >= performedCount) {
                     if (fecha) {
