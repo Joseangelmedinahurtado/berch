@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, ShieldCheck, Download, ChevronLeft, ChevronRight, Filter, XCircle } from 'lucide-react';
+import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, ShieldCheck, Download, ChevronLeft, ChevronRight, Filter, XCircle, Printer } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // --- Header Component (No changes) ---
 const AppHeader = () => (
@@ -123,9 +124,9 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                             <ol ref={stepperRef} className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide py-2">
                                 {steps.map((step) => (
                                     <li key={step.id} className="flex-shrink-0">
-                                        <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                        <button onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                             <div className={`${step.id === currentStepId ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-600'} w-8 h-8 rounded-full flex items-center justify-center`}>{getIconForStep(step)}</div>
-                                        </a>
+                                        </button>
                                     </li>
                                 ))}
                             </ol>
@@ -151,11 +152,11 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                                     <div className="h-6 w-px bg-gray-300 ml-5" />
                                 )}
                                 <li>
-                                    <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                    <button onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                         {getIconForStep(step)}
                                         <span className={`${step.id === currentStepId ? 'font-bold' : ''}`}>{step.title}</span>
                                         {step.status === 'with-observations' && (<span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">{step.errorCount}</span>)}
-                                    </a>
+                                    </button>
                                 </li>
                             </React.Fragment>
                         ))}
@@ -397,7 +398,7 @@ const AnalisisCausas = ({ formData, updateNestedForm }) => {
                         <h4 className="text-md font-semibold mb-4 text-gray-700">Análisis de Causa #{causaIndex + 1}</h4>
                         
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Sub-causa de Ishikawa a analizar</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Causa de espina de pescado</label>
                             <select value={causa.subCausaSeleccionada} onChange={(e) => updateCausa(causaIndex, 'subCausaSeleccionada', e.target.value)} className="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white">
                                 <option value="">Seleccione una sub-causa</option>
                                 {allSubCausas.map((sc, i) => (<option key={i} value={sc}>{sc}</option>))}
@@ -529,6 +530,16 @@ const CierreAccion = ({ formData, updateNestedForm, handleSave, editingId, isSav
 );
 
 
+const stepDefinitions = [
+    { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
+    { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
+    { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
+    { id: 3, title: 'Análisis de Causas', icon: TrendingUp, fields: ['analisisCausas'] },
+    { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
+    { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
+    { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
+];
+
 // --- Main Application Component ---
 const SistemaAccionesCorrectivas = () => {
     const [view, setView] = useState('list');
@@ -540,11 +551,20 @@ const SistemaAccionesCorrectivas = () => {
      const [filters, setFilters] = useState({ tipoAccion: 'all', estado: 'all', proceso: 'all', responsable: '', fechaDesde: '', fechaHasta: '' });
 
     useEffect(() => { 
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-        script.async = true;
-        document.body.appendChild(script);
-        return () => { document.body.removeChild(script); }
+        const jspdfScript = document.createElement('script');
+        jspdfScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        jspdfScript.async = true;
+        document.body.appendChild(jspdfScript);
+
+        const autoTableScript = document.createElement('script');
+        autoTableScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js";
+        autoTableScript.async = true;
+        document.body.appendChild(autoTableScript);
+
+        return () => { 
+            document.body.removeChild(jspdfScript);
+            document.body.removeChild(autoTableScript);
+        }
      }, []);
 
     const initialFormData = {
@@ -589,15 +609,6 @@ const SistemaAccionesCorrectivas = () => {
     const [modal, setModal] = useState({ isOpen: false, message: '', type: 'info' });
 
     // --- LÓGICA DE VALIDACIÓN Y ESTADO DEL STEPPER ---
-    const stepDefinitions = [
-        { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
-        { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
-        { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
-        { id: 3, title: 'Análisis de Causas', icon: TrendingUp, fields: ['analisisCausas'] },
-        { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
-        { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
-        { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
-    ];
 
     const managedSteps = useMemo(() => {
         const checkField = (obj, path) => path.split('.').reduce((o, i) => o && o[i] ? o[i] : null, obj);
@@ -650,7 +661,7 @@ const SistemaAccionesCorrectivas = () => {
         const today = new Date(); today.setHours(23, 59, 59, 999);
         let isOverdue = false;
         accion.planMejora.forEach((plan, planIndex) => {
-            const performedCount = accion.seguimientoPlan.filter(s => s.planId == planIndex).length;
+            const performedCount = accion.seguimientoPlan.filter(s => s.planId === planIndex).length;
             plan.fechasSeguimiento.forEach((fecha, fechaIndex) => {
                 if (fechaIndex >= performedCount) {
                     if (fecha) {
@@ -680,10 +691,6 @@ const SistemaAccionesCorrectivas = () => {
     const requestSort = (key) => { let direction = 'ascending'; if (sortConfig.key === key && sortConfig.direction === 'ascending') { direction = 'descending'; } setSortConfig({ key, direction }); };
     
     const handleDownloadExcel = () => {
-        if (typeof XLSX === 'undefined') {
-            setModal({ isOpen: true, message: 'La librería para exportar a Excel no está lista. Por favor, espere un momento y vuelva a intentarlo.', type: 'error' });
-            return;
-        }
 
         const today = new Date();
         const formattedDate = today.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -692,9 +699,25 @@ const SistemaAccionesCorrectivas = () => {
         const procesoLabels = { "admision_matricula": "Admisión y Matrícula", "ambiente_escolar": "Ambiente Escolar", "bienestar_institucional": "Bienestar Institucional", "comunicaciones": "Comunicaciones", "compras_contratacion": "Compras y Contratación", "desarrollo_humano": "Desarrollo Humano", "direccionamiento_estrategico": "Direccionamiento Estratégico", "ensenanza_aprendizaje": "Enseñanza Aprendizaje", "facturacion": "Facturación", "gestion_financiera": "Gestión Financiera", "mantenimiento_planta_fisica": "Mantenimiento Planta Física", "mantenimiento_sistemas": "Mantenimiento Sistemas", "promocion": "Promoción", "recaudo_cartera": "Recaudo y Cartera", "revision_mejora": "Revisión y Mejora" };
         const tipoAccionLabels = { 'correctiva': 'Correctiva', 'directa': 'Directa', 'preventiva': 'Preventiva', 'planMejora': 'Plan de Mejora' };
 
+        // --- Summary Sheet Calculation ---
+        const summaryByEstado = listaAcciones.reduce((acc, accion) => { const status = getAccionStatus(accion); acc[status] = (acc[status] || 0) + 1; return acc; }, {});
+        const summaryByAmbito = listaAcciones.reduce((acc, accion) => { const ambito = ambitoLabels[accion.ambito] || 'No especificado'; acc[ambito] = (acc[ambito] || 0) + 1; return acc; }, {});
+        const summaryByProceso = listaAcciones.reduce((acc, accion) => { const proceso = procesoLabels[accion.proceso] || 'No especificado'; acc[proceso] = (acc[proceso] || 0) + 1; return acc; }, {});
+
+        let summaryData = [
+            ['Resumen de Registros'], [],
+            ['Resumen por Estado', 'Total'], ...Object.entries(summaryByEstado).map(([key, value]) => [key.charAt(0).toUpperCase() + key.slice(1), value]), [],
+            ['Resumen por Ámbito', 'Total'], ...Object.entries(summaryByAmbito).map(([key, value]) => [key, value]), [],
+            ['Resumen por Proceso', 'Total'], ...Object.entries(summaryByProceso).map(([key, value]) => [key, value]), [],
+            ['TOTAL GENERAL', listaAcciones.length]
+        ];
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        wsSummary['!cols'] = [{ wch: 40 }, { wch: 10 }];
+        wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+        
+        // --- Detailed Report Sheet ---
         const titleRow = [`Informe de Acciones de Mejora - Generado el: ${formattedDate}`];
         const headers = ['ID', 'Tipo', 'Fecha Creación', 'Ámbito', 'Proceso', 'Responsable', 'Estado'];
-
         const dataRows = filteredAndSortedAcciones.map(accion => ([
             `#${accion.id.toString().slice(-5)}`,
             tipoAccionLabels[accion.tipoAccion] || accion.tipoAccion,
@@ -704,19 +727,96 @@ const SistemaAccionesCorrectivas = () => {
             accion.descripcion.responsable,
             getAccionStatus(accion)
         ]));
-
         const sheetData = [ titleRow, [], headers, ...dataRows ];
-
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
-
         const colWidths = [ { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 15 } ];
         ws['!cols'] = colWidths;
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
         
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Informe');
+        XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+        XLSX.utils.book_append_sheet(wb, ws, 'Informe Detallado');
         
         XLSX.writeFile(wb, `Informe_Acciones_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleDownloadPdf = (accion) => {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF) {
+             setModal({ isOpen: true, message: 'La librería para exportar a PDF no está lista. Por favor, espere un momento y vuelva a intentarlo.', type: 'error' });
+            return;
+        }
+
+        const doc = new jsPDF();
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        doc.setFontSize(18);
+        doc.text("Informe de Acción de Mejora", 105, 20, null, null, "center");
+        doc.setFontSize(10);
+        doc.text(`ID de Acción: #${accion.id.toString().slice(-5)}`, 15, 30);
+        doc.text(`Generado el: ${formattedDate}`, 205, 30, null, null, "right");
+        
+        const ambitoLabels = { "direccion_organizacion": "Dirección de Organización", "formacion_integral": "Formación Integral", "gestion_administrativa_financiera": "Gestión Administrativa y Financiera", "talento_humano": "Talento Humano"};
+        const procesoLabels = { "admision_matricula": "Admisión y Matrícula", "ambiente_escolar": "Ambiente Escolar", "bienestar_institucional": "Bienestar Institucional", "comunicaciones": "Comunicaciones", "compras_contratacion": "Compras y Contratación", "desarrollo_humano": "Desarrollo Humano", "direccionamiento_estrategico": "Direccionamiento Estratégico", "ensenanza_aprendizaje": "Enseñanza Aprendizaje", "facturacion": "Facturación", "gestion_financiera": "Gestión Financiera", "mantenimiento_planta_fisica": "Mantenimiento Planta Física", "mantenimiento_sistemas": "Mantenimiento Sistemas", "promocion": "Promoción", "recaudo_cartera": "Recaudo y Cartera", "revision_mejora": "Revisión y Mejora" };
+        const tipoAccionLabels = { 'correctiva': 'Correctiva', 'directa': 'Directa', 'preventiva': 'Preventiva', 'planMejora': 'Plan de Mejora' };
+
+        const sections = [
+            { title: "1. Información General", data: [
+                ["Tipo de Acción:", tipoAccionLabels[accion.tipoAccion] || accion.tipoAccion],
+                ["Fecha:", accion.fecha],
+                ["Ámbito:", ambitoLabels[accion.ambito] || accion.ambito],
+                ["Proceso:", procesoLabels[accion.proceso] || accion.proceso],
+                ["Fuente:", accion.fuente],
+            ]},
+            { title: "2. Descripción de la No Conformidad", data: [
+                ["Descripción:", accion.descripcion.descripcionNC],
+                ["Responsable:", accion.descripcion.responsable],
+            ]},
+            { title: "3. Análisis de Causas", data: [
+                ["Causas Raíz:", accion.analisisCausas.causas.map(c => c.descripcion).join('\n')]
+            ]},
+            { title: "4. Plan de Mejora", data: accion.planMejora.map((p, i) => [
+                [`Plan #${i+1} Qué:` , p.que],
+                [`Plan #${i+1} Cómo:`, p.como],
+                [`Plan #${i+1} Quién:`, p.quien],
+                [`Plan #${i+1} Fecha Implementación:`, p.fechaImplementacion],
+                [`Plan #${i+1} Fechas Seguimiento:`, p.fechasSeguimiento.join(', ')],
+            ]).flat()},
+            { title: "5. Riesgos y Oportunidades", data: [
+                 ["Análisis:", accion.analisisRiesgos],
+            ]},
+             { title: "6. Cierre de la Acción", data: [
+                 ["Eficacia:", accion.cierre.eficacia],
+                 ["Comentario Eficacia:", accion.cierre.comentarioEficacia],
+                 ["Lección Aprendida:", accion.cierre.leccionAprendida],
+                 ["Resultado Final:", accion.cierre.resultadoFinal],
+                 ["Responsable Cierre:", accion.cierre.responsable],
+                 ["Fecha Cierre:", accion.cierre.fecha],
+            ]},
+        ];
+
+        let startY = 40;
+        
+        sections.forEach(section => {
+            if (doc.internal.pageSize.height - startY < 30) {
+                doc.addPage();
+                startY = 20;
+            }
+            doc.autoTable({
+                startY: startY,
+                head: [[section.title]],
+                body: section.data.filter(row => row[1] && row[1].length > 0),
+                theme: 'grid',
+                headStyles: { fillColor: [22, 163, 74] },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } },
+                didDrawPage: (data) => {
+                    startY = data.cursor.y + 10;
+                }
+            });
+        });
+
+        doc.save(`Informe_Accion_#${accion.id.toString().slice(-5)}.pdf`);
     };
     
     const handleFilterChange = (e) => {
@@ -833,7 +933,7 @@ const SistemaAccionesCorrectivas = () => {
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('id')}><div className="flex items-center gap-2">ID <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('tipoAccion')}><div className="flex items-center gap-2">Tipo <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('fecha')}><div className="flex items-center gap-2">Fecha <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('proceso')}><div className="flex items-center gap-2">Proceso <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('responsable')}><div className="flex items-center gap-2">Responsable <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('estado')}><div className="flex items-center gap-2">Estado <ArrowUpDown size={14}/></div></th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th></tr></thead>
-                           <tbody className="bg-white divide-y divide-gray-200">{filteredAndSortedAcciones.map(accion => (<tr key={accion.id} className="hover:bg-gray-50"><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{accion.id.toString().slice(-5)}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{accion.tipoAccion}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.fecha}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.proceso}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.descripcion.responsable}</td><td className="px-6 py-4 whitespace-nowrap"><StatusBar status={getAccionStatus(accion)} /></td><td className="px-6 py-4 whitespace-nowrap text-sm font-medium"><button onClick={() => handleEdit(accion.id)} className="text-yellow-600 hover:text-yellow-900 mr-4" aria-label="Editar"><Edit size={16}/></button><button onClick={() => handleDelete(accion.id)} className="text-red-600 hover:text-red-900" aria-label="Eliminar"><Trash2 size={16}/></button></td></tr>))}</tbody>
+                           <tbody className="bg-white divide-y divide-gray-200">{filteredAndSortedAcciones.map(accion => (<tr key={accion.id} className="hover:bg-gray-50"><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{accion.id.toString().slice(-5)}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{accion.tipoAccion}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.fecha}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.proceso}</td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{accion.descripcion.responsable}</td><td className="px-6 py-4 whitespace-nowrap"><StatusBar status={getAccionStatus(accion)} /></td><td className="px-6 py-4 whitespace-nowrap text-sm font-medium"><button onClick={() => handleEdit(accion.id)} className="text-yellow-600 hover:text-yellow-900 mr-4" aria-label="Editar"><Edit size={16}/></button><button onClick={() => handleDelete(accion.id)} className="text-red-600 hover:text-red-900 mr-4" aria-label="Eliminar"><Trash2 size={16}/></button><button onClick={() => handleDownloadPdf(accion)} className="text-blue-600 hover:text-blue-900" aria-label="Imprimir"><Printer size={16}/></button></td></tr>))}</tbody>
                         </table>
                     </div>
                 </div>
