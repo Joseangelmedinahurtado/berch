@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Plus, Trash2, FileText, AlertTriangle, Target, TrendingUp, CheckCircle, X, Save, Edit, ArrowLeft, HelpCircle, Upload, ArrowUpDown, ShieldCheck, Download, ChevronLeft, ChevronRight, Filter, XCircle, Printer } from 'lucide-react';
-import * as XLSX from 'xlsx';
 
 // --- Header Component (No changes) ---
 const AppHeader = () => (
@@ -49,10 +48,10 @@ const HelpModal = ({ isOpen, onClose }) => {
                             <li><strong className="font-semibold text-gray-800">Información General:</strong> Define el tipo, ámbito, proceso, fecha y la fuente única de la acción.</li>
                             <li><strong className="font-semibold text-gray-800">Descripción NC:</strong> Detalla el problema y adjunta archivos de soporte si es necesario.</li>
                             <li><strong className="font-semibold text-gray-800">Acción Directa:</strong> Registra las acciones inmediatas y su seguimiento específico.</li>
-                            <li><strong className="font-semibold text-gray-800">Análisis de Causas:</strong> Usa el Diagrama de Ishikawa y completa los "5 Porqués" (mínimo 3, máximo 5) para cada causa raíz.</li>
+                            <li><strong className="font-semibold text-gray-800">Análisis de Causas:</strong> <span className="font-bold text-blue-700">[Esta hoja solo aparece si el tipo es 'Correctiva' o 'Preventiva']</span>. Usa el Diagrama de Ishikawa y completa los "5 Porqués".</li>
                             <li><strong className="font-semibold text-gray-800">Plan de Mejora:</strong> Define el plan a largo plazo y su seguimiento.</li>
                             <li>
-                                <strong className="font-semibold text-gray-800">Riesgos y Oportunidades:</strong> Revisa la no conformidad desde esta perspectiva. El análisis debe considerar la descripción del problema, el análisis de causas, el objetivo del proceso y el plan de acción. Si se identifica un riesgo u oportunidad, se debe actualizar la matriz correspondiente con apoyo de la oficina de calidad.
+                                <strong className="font-semibold text-gray-800">Riesgos y Oportunidades:</strong> <span className="font-bold text-blue-700">[Esta hoja solo aparece si el tipo es 'Correctiva' o 'Preventiva']</span>. Revisa la no conformidad desde esta perspectiva.
                             </li>
                             <li><strong className="font-semibold text-gray-800">Cierre de la Acción:</strong> Es la última hoja. Aquí registras la verificación final y la eficacia. En esta hoja encontrarás el botón para **Guardar Acción**.</li>
                         </ol>
@@ -124,9 +123,9 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                             <ol ref={stepperRef} className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide py-2">
                                 {steps.map((step) => (
                                     <li key={step.id} className="flex-shrink-0">
-                                        <button onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                        <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className="flex items-center justify-center p-3 rounded-lg" aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                             <div className={`${step.id === currentStepId ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-600'} w-8 h-8 rounded-full flex items-center justify-center`}>{getIconForStep(step)}</div>
-                                        </button>
+                                        </a>
                                     </li>
                                 ))}
                             </ol>
@@ -152,11 +151,11 @@ const IntelligentStepper = ({ steps, currentStepId, setCurrentStepId }) => {
                                     <div className="h-6 w-px bg-gray-300 ml-5" />
                                 )}
                                 <li>
-                                    <button onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
+                                    <a href="#" onClick={(e) => { e.preventDefault(); handleStepClick(step.id); }} className={getStepClasses(step)} aria-current={step.id === currentStepId ? "step" : undefined} title={step.tooltip}>
                                         {getIconForStep(step)}
                                         <span className={`${step.id === currentStepId ? 'font-bold' : ''}`}>{step.title}</span>
                                         {step.status === 'with-observations' && (<span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">{step.errorCount}</span>)}
-                                    </button>
+                                    </a>
                                 </li>
                             </React.Fragment>
                         ))}
@@ -505,7 +504,7 @@ const AnalisisRiesgos = ({ formData, updateForm }) => (
         </div>
     </div>
 );
-const CierreAccion = ({ formData, updateNestedForm, handleSave, editingId, isSaveDisabled }) => ( 
+const CierreAccion = ({ formData, updateNestedForm, handleSave, editingId, isSaveDisabled, isAnalisisRequired }) => ( 
     <div className="space-y-4 animate-fade-in">
         <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-r-lg shadow-sm" role="alert"><p className="font-bold mb-1">Nota Importante:</p><p className="text-sm">Esta sección solo debe ser completada al finalizar todo el proceso, una vez que las acciones hayan sido implementadas y se haya verificado su eficacia para dar cierre a la acción de mejora.</p></div>
         <div>
@@ -524,21 +523,16 @@ const CierreAccion = ({ formData, updateNestedForm, handleSave, editingId, isSav
         </div>
         <div className="flex flex-col items-end pt-6 border-t mt-6">
             <button onClick={handleSave} disabled={isSaveDisabled} className="flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-lg hover:bg-green-800 transition-colors shadow-lg text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"><Save size={20} /> {editingId ? 'Actualizar Acción' : 'Guardar Acción'}</button>
-            {isSaveDisabled && (<p className="text-red-600 text-sm mt-2 text-right">Debe completar todos los campos de 'Información General' y los '5 Porqués' para poder guardar.</p>)}
+            {isSaveDisabled && (
+                <p className="text-red-600 text-sm mt-2 text-right">
+                    Debe completar todos los campos de 'Información General'
+                    {isAnalisisRequired && " y los '5 Porqués'"} para poder guardar.
+                </p>
+            )}
         </div>
     </div>
 );
 
-
-const stepDefinitions = [
-    { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
-    { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
-    { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
-    { id: 3, title: 'Análisis de Causas', icon: TrendingUp, fields: ['analisisCausas'] },
-    { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
-    { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
-    { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
-];
 
 // --- Main Application Component ---
 const SistemaAccionesCorrectivas = () => {
@@ -551,6 +545,11 @@ const SistemaAccionesCorrectivas = () => {
      const [filters, setFilters] = useState({ tipoAccion: 'all', estado: 'all', proceso: 'all', responsable: '', fechaDesde: '', fechaHasta: '' });
 
     useEffect(() => { 
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        script.async = true;
+        document.body.appendChild(script);
+
         const jspdfScript = document.createElement('script');
         jspdfScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
         jspdfScript.async = true;
@@ -562,6 +561,7 @@ const SistemaAccionesCorrectivas = () => {
         document.body.appendChild(autoTableScript);
 
         return () => { 
+            document.body.removeChild(script);
             document.body.removeChild(jspdfScript);
             document.body.removeChild(autoTableScript);
         }
@@ -609,26 +609,57 @@ const SistemaAccionesCorrectivas = () => {
     const [modal, setModal] = useState({ isOpen: false, message: '', type: 'info' });
 
     // --- LÓGICA DE VALIDACIÓN Y ESTADO DEL STEPPER ---
+    const allStepDefinitions = [
+        { id: 0, title: 'Información General', icon: FileText, fields: ['tipoAccion', 'ambito', 'proceso', 'fecha', 'fuente'] },
+        { id: 1, title: 'Descripción NC', icon: AlertTriangle, fields: ['descripcion.descripcionNC', 'descripcion.responsable'] },
+        { id: 2, title: 'Acción Directa', icon: Target, fields: [] }, // Opcional, siempre completo
+        { id: 3, title: 'Análisis de Causas', icon: TrendingUp, fields: ['analisisCausas'] },
+        { id: 4, title: 'Plan de Mejora', icon: CheckCircle, fields: [] }, // Opcional, siempre completo
+        { id: 5, title: 'Riesgos y Oportunidades', icon: AlertTriangle, fields: ['analisisRiesgos'] },
+        { id: 6, title: 'Cierre de la Acción', icon: ShieldCheck, fields: [] } // Se llena al final
+    ];
+    
+    const isAnalisisRequired = formData.tipoAccion === 'correctiva' || formData.tipoAccion === 'preventiva';
+
+    const activeStepDefinitions = useMemo(() => {
+        if (isAnalisisRequired) {
+            return allStepDefinitions; // Return all 7 steps
+        }
+        // Filter out steps 3 and 5
+        return allStepDefinitions.filter(step => step.id !== 3 && step.id !== 5);
+    }, [isAnalisisRequired]);
+
+    useEffect(() => {
+        // If the current step is one that just got hidden, reset to step 0
+        if (!activeStepDefinitions.find(step => step.id === currentStepId)) {
+            setCurrentStepId(0);
+        }
+    }, [activeStepDefinitions, currentStepId]);
+
 
     const managedSteps = useMemo(() => {
         const checkField = (obj, path) => path.split('.').reduce((o, i) => o && o[i] ? o[i] : null, obj);
 
-        return stepDefinitions.map(step => {
+        return activeStepDefinitions.map(step => {
             let missingFields = [];
-            if (step.id < 6) { // No validar el cierre hasta el final
-                 if (step.id === 3) { // Validación especial para Análisis de Causas
-                    if (formData.analisisCausas && formData.analisisCausas.causas.some(c => c.descripcion.trim() === '' || c.cincoPorque.some(p => p.trim() === ''))) {
-                        missingFields.push('Completar todas las causas y porqués');
+            
+            // --- Check validation only for REQUIRED fields ---
+            const isInfoGeneral = step.id === 0;
+            const isAnalisis = step.id === 3;
+            
+            if (isInfoGeneral) {
+                 step.fields.forEach(field => {
+                    const value = checkField(formData, field);
+                    if (!value || (typeof value === 'string' && value.trim().length === 0)) {
+                        missingFields.push(field.split('.').pop());
                     }
-                } else {
-                    step.fields.forEach(field => {
-                        const value = checkField(formData, field);
-                        if (!value || (typeof value === 'string' && value.trim().length === 0) || (Array.isArray(value) && value.length === 0) ) {
-                            missingFields.push(field.split('.').pop());
-                        }
-                    });
+                });
+            } else if (isAnalisis && isAnalisisRequired) { // Only validate Analisis if it's required
+                if (formData.analisisCausas && formData.analisisCausas.causas.some(c => c.cincoPorque.some(p => p.trim() === ''))) {
+                    missingFields.push('Completar los 5 Porqués');
                 }
             }
+            // --- Other steps are optional, so they don't add to missingFields for observations ---
 
             let status = 'pending';
             if (step.id === currentStepId) {
@@ -638,9 +669,19 @@ const SistemaAccionesCorrectivas = () => {
             if (missingFields.length > 0) {
                  if(step.id < currentStepId) status = 'with-observations';
             } else if (step.id < currentStepId) {
-                status = 'completed';
+                 // Check if step is optional or complete
+                const isOptional = !isInfoGeneral && !isAnalisis;
+                if (!isOptional) {
+                    status = 'completed';
+                }
             }
             
+            // Mark info general as complete if it's filled, even if not past it
+            if (isInfoGeneral && missingFields.length === 0) {
+                 status = 'completed';
+            }
+            
+            // If active and has errors
             if (status === 'active' && missingFields.length > 0) {
                  status = 'with-observations';
             }
@@ -649,10 +690,10 @@ const SistemaAccionesCorrectivas = () => {
                 ...step,
                 status,
                 errorCount: missingFields.length,
-                tooltip: missingFields.length > 0 ? `Faltan campos: ${missingFields.join(', ')}` : 'Paso completo'
+                tooltip: missingFields.length > 0 ? `Campos obligatorios faltantes` : (step.status === 'completed' ? 'Paso completado' : `Ir a ${step.title}`)
             };
         });
-    }, [formData, currentStepId]);
+    }, [formData, currentStepId, activeStepDefinitions, isAnalisisRequired]);
 
 
     // --- Handlers ---
@@ -661,7 +702,7 @@ const SistemaAccionesCorrectivas = () => {
         const today = new Date(); today.setHours(23, 59, 59, 999);
         let isOverdue = false;
         accion.planMejora.forEach((plan, planIndex) => {
-            const performedCount = accion.seguimientoPlan.filter(s => s.planId === planIndex).length;
+            const performedCount = accion.seguimientoPlan.filter(s => s.planId == planIndex).length;
             plan.fechasSeguimiento.forEach((fecha, fechaIndex) => {
                 if (fechaIndex >= performedCount) {
                     if (fecha) {
@@ -684,13 +725,17 @@ const SistemaAccionesCorrectivas = () => {
     const removeFechaSeguimiento = (planIndex, fechaIndex) => { setFormData(prev => { const newPlanMejora = [...prev.planMejora]; const plan = { ...newPlanMejora[planIndex] }; if (plan.fechasSeguimiento.length > 1) { const newFechas = plan.fechasSeguimiento.filter((_, i) => i !== fechaIndex); plan.fechasSeguimiento = newFechas; newPlanMejora[planIndex] = plan; } return { ...prev, planMejora: newPlanMejora }; }); };
     const updateFechaSeguimiento = (planIndex, fechaIndex, value) => { setFormData(prev => { const newPlanMejora = [...prev.planMejora]; const plan = { ...newPlanMejora[planIndex] }; const newFechas = [...plan.fechasSeguimiento]; newFechas[fechaIndex] = value; plan.fechasSeguimiento = newFechas; newPlanMejora[planIndex] = plan; return { ...prev, planMejora: newPlanMejora }; }); };
     
-    const handleSave = () => { if (isSaveDisabled) { setModal({ isOpen: true, message: 'Por favor, complete todos los campos de "5 Porqués" antes de guardar.', type: 'error' }); return; } if (editingId !== null) { setListaAcciones(listaAcciones.map(accion => accion.id === editingId ? { ...formData, id: editingId } : accion )); setModal({ isOpen: true, message: 'Acción actualizada correctamente.', type: 'success' }); } else { const newAction = { ...formData, id: Date.now() }; setListaAcciones([...listaAcciones, newAction]); setModal({ isOpen: true, message: 'Acción guardada correctamente.', type: 'success' }); } setFormData(initialFormData); setEditingId(null); setCurrentStepId(0); setView('list'); };
+    const handleSave = () => { if (isSaveDisabled) { setModal({ isOpen: true, message: 'Por favor, complete los campos obligatorios para guardar.', type: 'error' }); return; } if (editingId !== null) { setListaAcciones(listaAcciones.map(accion => accion.id === editingId ? { ...formData, id: editingId } : accion )); setModal({ isOpen: true, message: 'Acción actualizada correctamente.', type: 'success' }); } else { const newAction = { ...formData, id: Date.now() }; setListaAcciones([...listaAcciones, newAction]); setModal({ isOpen: true, message: 'Acción guardada correctamente.', type: 'success' }); } setFormData(initialFormData); setEditingId(null); setCurrentStepId(0); setView('list'); };
     const handleEdit = (id) => { const actionToEdit = listaAcciones.find(accion => accion.id === id); if (actionToEdit) { setFormData(actionToEdit); setEditingId(id); setCurrentStepId(0); setView('form'); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
     const handleCreateNew = () => { setFormData(initialFormData); setEditingId(null); setCurrentStepId(0); setView('form'); };
     const handleDelete = (id) => { setListaAcciones(listaAcciones.filter(accion => accion.id !== id)); setModal({ isOpen: true, message: 'Acción eliminada.', type: 'info' }); };
     const requestSort = (key) => { let direction = 'ascending'; if (sortConfig.key === key && sortConfig.direction === 'ascending') { direction = 'descending'; } setSortConfig({ key, direction }); };
     
     const handleDownloadExcel = () => {
+        if (typeof window.XLSX === 'undefined') {
+            setModal({ isOpen: true, message: 'La librería para exportar a Excel no está lista. Por favor, espere un momento y vuelva a intentarlo.', type: 'error' });
+            return;
+        }
 
         const today = new Date();
         const formattedDate = today.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -711,7 +756,7 @@ const SistemaAccionesCorrectivas = () => {
             ['Resumen por Proceso', 'Total'], ...Object.entries(summaryByProceso).map(([key, value]) => [key, value]), [],
             ['TOTAL GENERAL', listaAcciones.length]
         ];
-        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        const wsSummary = window.XLSX.utils.aoa_to_sheet(summaryData);
         wsSummary['!cols'] = [{ wch: 40 }, { wch: 10 }];
         wsSummary['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
         
@@ -728,26 +773,30 @@ const SistemaAccionesCorrectivas = () => {
             getAccionStatus(accion)
         ]));
         const sheetData = [ titleRow, [], headers, ...dataRows ];
-        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        const ws = window.XLSX.utils.aoa_to_sheet(sheetData);
         const colWidths = [ { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 15 } ];
         ws['!cols'] = colWidths;
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
         
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
-        XLSX.utils.book_append_sheet(wb, ws, 'Informe Detallado');
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Informe Detallado');
         
-        XLSX.writeFile(wb, `Informe_Acciones_${new Date().toISOString().slice(0,10)}.xlsx`);
+        window.XLSX.writeFile(wb, `Informe_Acciones_${new Date().toISOString().slice(0,10)}.xlsx`);
     };
 
     const handleDownloadPdf = (accion) => {
-        const { jsPDF } = window.jspdf;
-        if (!jsPDF) {
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
              setModal({ isOpen: true, message: 'La librería para exportar a PDF no está lista. Por favor, espere un momento y vuelva a intentarlo.', type: 'error' });
             return;
         }
-
+        const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        if (typeof doc.autoTable !== 'function') {
+            setModal({ isOpen: true, message: 'El plugin autoTable de PDF no está listo. Por favor, espere y reintente.', type: 'error' });
+            return;
+        }
+
         const today = new Date();
         const formattedDate = today.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
         
@@ -799,6 +848,9 @@ const SistemaAccionesCorrectivas = () => {
         let startY = 40;
         
         sections.forEach(section => {
+            const body = section.data.filter(row => row[1] && String(row[1]).trim().length > 0)
+            if (body.length === 0) return;
+
             if (doc.internal.pageSize.height - startY < 30) {
                 doc.addPage();
                 startY = 20;
@@ -806,14 +858,12 @@ const SistemaAccionesCorrectivas = () => {
             doc.autoTable({
                 startY: startY,
                 head: [[section.title]],
-                body: section.data.filter(row => row[1] && row[1].length > 0),
+                body: body,
                 theme: 'grid',
                 headStyles: { fillColor: [22, 163, 74] },
                 columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } },
-                didDrawPage: (data) => {
-                    startY = data.cursor.y + 10;
-                }
             });
+             startY = doc.lastAutoTable.finalY + 10;
         });
 
         doc.save(`Informe_Accion_#${accion.id.toString().slice(-5)}.pdf`);
@@ -855,26 +905,45 @@ const SistemaAccionesCorrectivas = () => {
     const isSaveDisabled = useMemo(() => {
         const { tipoAccion, ambito, proceso, fecha, fuente, analisisCausas } = formData;
         
+        // 1. Info General is ALWAYS required
         const infoGeneralIncomplete = !tipoAccion || !ambito || !proceso || !fecha || !fuente;
         if (infoGeneralIncomplete) {
             return true;
         }
 
-        const analisisIncomplete = analisisCausas.causas.some(causa => 
-             causa.cincoPorque.some(porque => porque.trim() === '')
-        );
-        if (analisisIncomplete) {
-            return true;
-        }
+        // 2. Check if Analisis is required for this type
+        const isAnalisisRequiredForSave = tipoAccion === 'correctiva' || tipoAccion === 'preventiva';
 
+        if (isAnalisisRequiredForSave) {
+            // 3. If required, check if it's incomplete
+            const analisisIncomplete = analisisCausas.causas.some(causa => 
+                 causa.cincoPorque.some(porque => porque.trim() === '')
+            );
+            if (analisisIncomplete) {
+                return true;
+            }
+        }
+        
+        // If Info General is complete and Analisis is either complete or not required,
+        // then saving is allowed.
         return false;
     }, [formData]);
 
-    const handleNext = () => { if (currentStepId < stepDefinitions.length - 1) setCurrentStepId(currentStepId + 1); };
-    const handlePrev = () => { if (currentStepId > 0) setCurrentStepId(currentStepId - 1); };
+    const handleNext = () => { 
+        const currentIndex = activeStepDefinitions.findIndex(s => s.id === currentStepId);
+        if (currentIndex < activeStepDefinitions.length - 1) {
+            setCurrentStepId(activeStepDefinitions[currentIndex + 1].id);
+        }
+    };
+    const handlePrev = () => { 
+        const currentIndex = activeStepDefinitions.findIndex(s => s.id === currentStepId);
+        if (currentIndex > 0) {
+            setCurrentStepId(activeStepDefinitions[currentIndex - 1].id);
+        }
+    };
 
     const renderCurrentStep = () => {
-        const props = { formData, updateForm, updateNestedForm, addItemToArray, removeItemFromArray, updateArrayItem, handleSave, editingId, isSaveDisabled, addFechaSeguimiento, removeFechaSeguimiento, updateFechaSeguimiento };
+        const props = { formData, updateForm, updateNestedForm, addItemToArray, removeItemFromArray, updateArrayItem, handleSave, editingId, isSaveDisabled, addFechaSeguimiento, removeFechaSeguimiento, updateFechaSeguimiento, isAnalisisRequired };
         switch (currentStepId) {
             case 0: return <InformacionGeneral {...props} />;
             case 1: return <DescripcionNC {...props} />;
@@ -950,13 +1019,13 @@ const SistemaAccionesCorrectivas = () => {
                                  <h2 className="text-2xl font-semibold mb-6 text-white bg-green-700 text-center p-4 rounded-lg">
                                     {editingId ? `Editando Acción #${editingId.toString().slice(-5)}` : 'Crear Nueva Acción'}
                                 </h2>
-                                <h3 className="text-xl font-semibold mb-4 text-gray-700">{stepDefinitions[currentStepId].title}</h3>
+                                <h3 className="text-xl font-semibold mb-4 text-gray-700">{allStepDefinitions.find(s => s.id === currentStepId).title}</h3>
                                 {renderCurrentStep()}
                             </div>
                         </main>
                         <BottomNavBar 
                             currentStepId={currentStepId} 
-                            steps={managedSteps}
+                            steps={activeStepDefinitions}
                             onNext={handleNext}
                             onPrev={handlePrev}
                             onSaveDraft={() => alert('Guardando borrador...')}
